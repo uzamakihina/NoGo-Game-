@@ -15,6 +15,9 @@ from board_util import GoBoardUtil, BLACK, WHITE, EMPTY, BORDER, \
 
 class SimpleGoBoard(object):
 
+    def get_player(self):
+        return self.current_player
+
     def get_color(self, point):
         return self.board[point]
 

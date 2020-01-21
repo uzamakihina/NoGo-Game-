@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 #/usr/local/bin/python3
 # Set the path to your python3 above
-
+import random
 from gtp_connection import GtpConnection
 from board_util import GoBoardUtil
 from simple_board import SimpleGoBoard
@@ -24,15 +24,19 @@ class Go0():
         self.version = 1.0
         
     def get_move(self, board, color):
-        moves =  GoBoardUtil.generate_legal_moves(board, color)
-        
-        
-        move = GoBoardUtil.gen1_move(board, color,moves)
+        move =  GoBoardUtil.generate_legal_moves(board, color)
+        moves = GoBoardUtil.gen1_move(board, color,move)
         
 
 
+        if moves != None:
 
-        return move
+            rand = random.randint(0,len(moves)-1)
+            return moves[rand]
+
+        
+        return None
+            
     
 def run():
     """

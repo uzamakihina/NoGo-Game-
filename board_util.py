@@ -92,24 +92,45 @@ def coord_to_point(row, col, boardsize):
 class GoBoardUtil(object):
 
 
+    def check_legal(color,move,board):
+
+
+       
+
+        
+
+        if not board.is_legal(move,color):
+            return False
+        if board.is_capture(move,color):
+            return False
+
+        return True
+            
+        # if board.own_lib
+
     
     def gen1_move(board,color,moves):
 
-        temp = []
-        allmoves = []
-        for move in moves:
-            if not board.is_eye(move, color):
+        # temp = []
+        # allmoves = []
+        # opp_color = GoBoardUtil.opponent(color)
+        # for move in moves:
+        #     if not board.is_eye(move, opp_color):
                 
-                #if not board.is_capture(move,color):
+        #         #if not board.is_capture(move,color):
                     
-                temp.append(move)
+        #         temp.append(move)
 
-        for move in temp:
+        allmoves = []
+
+        for move in moves:
             if not board.is_capture(move,color):
                 allmoves.append(move)
 
+        #if own lib
+
         if len(allmoves) != 0:
-            return allmoves[0]
+            return allmoves
         else:
             return PASS
 

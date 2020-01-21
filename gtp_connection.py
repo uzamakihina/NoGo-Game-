@@ -201,7 +201,36 @@ class GtpConnection():
 
     def gogui_rules_legal_moves_cmd(self, args):
         """ Implement this function for Assignment 1 """
-        self.respond()
+        #"gogui-rules_legal_moves"
+
+    
+        legal = []
+        moves =  GoBoardUtil.generate_legal_moves(self.board, 1)
+        leg_moves = GoBoardUtil.gen1_move(self.board, 1,moves)
+
+
+        if leg_moves != None:
+            for i in leg_moves:
+                legal.append(i)
+
+        moves =  GoBoardUtil.generate_legal_moves(self.board, 2)
+        leg_moves = GoBoardUtil.gen1_move(self.board, 2,moves)
+
+        if leg_moves != None:
+            for i in leg_moves:
+                legal.append(i)
+
+
+        gtp_moves = []
+        for move in legal:
+            coords = point_to_coord(move, self.board.size)
+            gtp_moves.append(format_point(coords))
+
+        if gtp_moves == []:
+            self.respond([])
+        else:
+            sorted_moves = ' '.join(sorted(gtp_moves))
+            self.respond(sorted_moves)
         return
 
     def gogui_rules_side_to_move_cmd(self, args):
@@ -231,38 +260,69 @@ class GtpConnection():
             
     def gogui_rules_final_result_cmd(self, args):
         """ Implement this function for Assignment 1 """
-        self.respond("unknown")
+
+        response = None
+        if self.board.get_player() == 1:
+            response = "black"
+        else:
+            response = "white"
+
+
+        self.respond(response)
 
     def play_cmd(self, args):
         """ Modify this function for Assignment 1 """
         """
         play a move args[1] for given color args[0] in {'b','w'}
         """
+
+
         try:
             board_color = args[0].lower()
-            board_move = args[1]
-            color = color_to_int(board_color)
-            if args[1].lower() == 'pass':
-                self.board.play_move(PASS, color)
-                self.board.current_player = GoBoardUtil.opponent(color)
-                self.respond()
-                return
+            
             coord = move_to_coord(args[1], self.board.size)
-            if coord:
-                move = coord_to_point(coord[0],coord[1], self.board.size)
+            coord = coord_to_point(coord[0],coord[1], self.board.size)
+            color = color_to_int(board_color)
+            
+            if GoBoardUtil.check_legal(color,coord,self.board):
+
+                if not self.board.play_move(coord, color):
+                    self.respond("Illegal Moveeeee: {}".format(coord))
+                    return
+
+                self.respond()
             else:
-                self.error("Error executing move {} converted from {}"
-                           .format(move, args[1]))
-                return
-            if not self.board.play_move(move, color):
-                self.respond("Illegal Move: {}".format(board_move))
-                return
-            else:
-                self.debug_msg("Move: {}\nBoard:\n{}\n".
-                                format(board_move, self.board2d()))
-            self.respond()
+                self.respond("Illegal Moveeeee: {}".format(coord))
+
         except Exception as e:
             self.respond('Error: {}'.format(str(e)))
+
+
+        # try:
+        #     board_color = args[0].lower()
+        #     board_move = args[1]
+        #     color = color_to_int(board_color)
+        #     if args[1].lower() == 'pass':
+        #         self.board.play_move(PASS, color)
+        #         self.board.current_player = GoBoardUtil.opponent(color)
+        #         self.respond()
+        #         return
+        #     coord = move_to_coord(args[1], self.board.size)
+        #     if coord:
+        #         move = coord_to_point(coord[0],coord[1], self.board.size)
+        #     else:
+        #         self.error("Error executing move {} converted from {}"
+        #                    .format(move, args[1]))
+        #         return
+        #     if not self.board.play_move(move, color):
+        #         self.respond("Illegal Move: {}".format(board_move))
+        #         return
+        #     else:
+        #         self.debug_msg("Move: {}\nBoard:\n{}\n".
+        #                         format(board_move, self.board2d()))
+        #     self.respond()
+        # except Exception as e:
+        #     self.respond('Error: {}'.format(str(e)))
 
     def genmove_cmd(self, args):
         """ Modify this function for Assignment 1 """
@@ -276,7 +336,7 @@ class GtpConnection():
             self.board.play_move(move, color)
             self.respond(move_as_string)
         else:
-            self.respond("Illegal move: {}".format(move_as_string))
+            self.respond("Illegal moveeee: {}".format(move_as_string))
 
     """
     ==========================================================================
