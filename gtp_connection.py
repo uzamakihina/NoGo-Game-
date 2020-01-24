@@ -262,7 +262,7 @@ class GtpConnection():
         """ Implement this function for Assignment 1 """
 
         response = None
-        if self.board.get_player() == 1:
+        if self.board.get_player() == 2:
             response = "black"
         else:
             response = "white"
@@ -276,53 +276,46 @@ class GtpConnection():
         play a move args[1] for given color args[0] in {'b','w'}
         """
 
-
         try:
             board_color = args[0].lower()
-            
-            coord = move_to_coord(args[1], self.board.size)
-            coord = coord_to_point(coord[0],coord[1], self.board.size)
             color = color_to_int(board_color)
+
+            #color error
+            if self.board.current_player != color:
+
+                self.respond("illegal move: " +board_color.lower()+" wrong color")
+                return
             
-            if GoBoardUtil.check_legal(color,coord,self.board):
+            #coordinate
+            coord = move_to_coord(args[1], self.board.size)
+           
+            coord = coord_to_point(coord[0],coord[1], self.board.size)
 
-                if not self.board.play_move(coord, color):
-                    self.respond("Illegal Moveeeee: {}".format(coord))
-                    return
+            # occupied
+            if self.board.board[coord] != 0:
 
-                self.respond()
-            else:
-                self.respond("Illegal Moveeeee: {}".format(coord))
+                self.respond("illegal move: " + args[1].lower() +" occupied")
+                return
+            
+            # capture 
+
+            if self.board.is_capture(coord,color):
+                self.respond("illegal move: " + args[1].lower()+ " capture")
+                return
+
+            if not self.board.play_move(coord, color):
+                self.respond("illegal move: "+ args[1].lower()+" suicide")
+                return
+            
 
         except Exception as e:
             self.respond('Error: {}'.format(str(e)))
 
 
-        # try:
-        #     board_color = args[0].lower()
-        #     board_move = args[1]
-        #     color = color_to_int(board_color)
-        #     if args[1].lower() == 'pass':
-        #         self.board.play_move(PASS, color)
-        #         self.board.current_player = GoBoardUtil.opponent(color)
-        #         self.respond()
-        #         return
-        #     coord = move_to_coord(args[1], self.board.size)
-        #     if coord:
-        #         move = coord_to_point(coord[0],coord[1], self.board.size)
-        #     else:
-        #         self.error("Error executing move {} converted from {}"
-        #                    .format(move, args[1]))
-        #         return
-        #     if not self.board.play_move(move, color):
-        #         self.respond("Illegal Move: {}".format(board_move))
-        #         return
-        #     else:
-        #         self.debug_msg("Move: {}\nBoard:\n{}\n".
-        #                         format(board_move, self.board2d()))
-        #     self.respond()
-        # except Exception as e:
-        #     self.respond('Error: {}'.format(str(e)))
+        self.respond()
+
+
+
 
     def genmove_cmd(self, args):
         """ Modify this function for Assignment 1 """
@@ -334,9 +327,14 @@ class GtpConnection():
         move_as_string = format_point(move_coord)
         if self.board.is_legal(move, color):
             self.board.play_move(move, color)
-            self.respond(move_as_string)
+            #self.respond("cow")
+            #self.respond(move_as_string)
+            if move_as_string == "PASS":
+
+                return move_as_string
         else:
-            self.respond("Illegal moveeee: {}".format(move_as_string))
+            pass
+            self.respond("resign")
 
     """
     ==========================================================================
@@ -432,7 +430,7 @@ def move_to_coord(point_str, board_size):
     except (IndexError, ValueError):
         raise ValueError("invalid point: '{}'".format(s))
     if not (col <= board_size and row <= board_size):
-        raise ValueError("point off board: '{}'".format(s))
+        raise ValueError("illegal move: '{}'".format(s)+ " wrong coordinate")
     return row, col
 
 def color_to_int(c):

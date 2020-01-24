@@ -225,22 +225,26 @@ class SimpleGoBoard(object):
 
         if is_black_white(color):
 
-            nb = self._neighbors(point)
+            board_copy = self.copy()
+
+            nb = board_copy._neighbors(point)
             opp_color = GoBoardUtil.opponent(color)
-            self.board[point] = color
+            board_copy.board[point] = color
             for opp_point in nb:
                 
-                if self.board[opp_point] == opp_color:
-                    opp_block = self._block_of(opp_point)
-                    if not self._has_liberty(opp_block):
+                if board_copy.board[opp_point] == opp_color:
+                    opp_block = board_copy._block_of(opp_point)
+                    if not board_copy._has_liberty(opp_block):
 
                         
 
-                        self.board[point] = EMPTY
+                        board_copy.board[point] = EMPTY
+                        del board_copy
                         return True
                     
             
-            self.board[point] = EMPTY
+            board_copy.board[point] = EMPTY
+            del board_copy
             return False
         else:
             return True
