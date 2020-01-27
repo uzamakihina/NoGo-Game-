@@ -95,9 +95,6 @@ class GoBoardUtil(object):
     def check_legal(color,move,board):
 
 
-       
-
-        
 
         if not board.is_legal(move,color):
             return False
@@ -111,16 +108,7 @@ class GoBoardUtil(object):
     
     def gen1_move(board,color,moves):
 
-        # temp = []
-        # allmoves = []
-        # opp_color = GoBoardUtil.opponent(color)
-        # for move in moves:
-        #     if not board.is_eye(move, opp_color):
-                
-        #         #if not board.is_capture(move,color):
-                    
-        #         temp.append(move)
-
+        
         allmoves = []
 
         for move in moves:

@@ -6,6 +6,7 @@ Parts of this code were originally based on the gtp module
 in the Deep-Go project by Isaac Henrion and Amos Storkey 
 at the University of Edinburgh.
 """
+import random
 import traceback
 from sys import stdin, stdout, stderr
 from board_util import GoBoardUtil, BLACK, WHITE, EMPTY, BORDER, PASS, \
@@ -200,38 +201,40 @@ class GtpConnection():
         self.respond(str(self.board.size))
 
     def gogui_rules_legal_moves_cmd(self, args):
+        #"gogui-rules_legal_moves"
         """ Implement this function for Assignment 1 """
         #"gogui-rules_legal_moves"
+        # try:
+        #board_color = args[0].lower()
+        color = self.board.current_player
 
-    
-        legal = []
-        moves =  GoBoardUtil.generate_legal_moves(self.board, 1)
-        leg_moves = GoBoardUtil.gen1_move(self.board, 1,moves)
+        move =  GoBoardUtil.generate_legal_moves(self.board, color)
+        moves = GoBoardUtil.gen1_move(self.board, color, move)
+
+        coords = []
+        if moves == None:
+            return self.respond(coords)
+        
+        for m in moves:
+            coord = point_to_coord(m,self.board.size)
+            coords.append(format_point(coord))
+        
+        coords = ' '.join(sorted(coords))
+        self.respond(coords)
 
 
-        if leg_moves != None:
-            for i in leg_moves:
-                legal.append(i)
-
-        moves =  GoBoardUtil.generate_legal_moves(self.board, 2)
-        leg_moves = GoBoardUtil.gen1_move(self.board, 2,moves)
-
-        if leg_moves != None:
-            for i in leg_moves:
-                legal.append(i)
+        # for move in moves:
+        #     coords = point_to_coord(move, self.board.size)
+        #     gtp_moves.append(format_point(coords))
+        # sorted_moves = ' '.join(sorted(gtp_moves))
 
 
-        gtp_moves = []
-        for move in legal:
-            coords = point_to_coord(move, self.board.size)
-            gtp_moves.append(format_point(coords))
 
-        if gtp_moves == []:
-            self.respond([])
-        else:
-            sorted_moves = ' '.join(sorted(gtp_moves))
-            self.respond(sorted_moves)
-        return
+        # except Exception as e:
+        #     self.respond('Error: Incorrect arguements' )
+
+        
+        
 
     def gogui_rules_side_to_move_cmd(self, args):
         """ We already implemented this function for Assignment 1 """
@@ -261,11 +264,23 @@ class GtpConnection():
     def gogui_rules_final_result_cmd(self, args):
         """ Implement this function for Assignment 1 """
 
-        response = None
-        if self.board.get_player() == 2:
-            response = "black"
-        else:
+        response = "unknown"
+
+        color = self.board.current_player
+
+        move =  GoBoardUtil.generate_legal_moves(self.board, color)
+        moves = GoBoardUtil.gen1_move(self.board, color, move)
+
+        if moves != None:
+            self.respond(response)
+            return 
+        
+
+       
+        if self.board.current_player == 1:
             response = "white"
+        else:
+            response = "black"
 
 
         self.respond(response)
@@ -283,28 +298,32 @@ class GtpConnection():
             #color error
             if self.board.current_player != color:
 
-                self.respond("illegal move: " +board_color.lower()+" wrong color")
+                self.respond('illegal move: "{} {}" wrong color'.format(args[0],args[1]))
                 return
             
             #coordinate
+
+            if args[1].lower() == 'pass':
+                self.respond('illegal move: "{} {}" wrong coordinate'.format(args[0],args[1]))
+                return
+
             coord = move_to_coord(args[1], self.board.size)
-           
             coord = coord_to_point(coord[0],coord[1], self.board.size)
 
             # occupied
             if self.board.board[coord] != 0:
 
-                self.respond("illegal move: " + args[1].lower() +" occupied")
+                self.respond('illegal move: "{} {}" point occupied'.format(args[0],args[1]))
                 return
             
             # capture 
 
             if self.board.is_capture(coord,color):
-                self.respond("illegal move: " + args[1].lower()+ " capture")
+                self.respond('illegal move: "{} {}" is capture'.format(args[0],args[1]))
                 return
 
             if not self.board.play_move(coord, color):
-                self.respond("illegal move: "+ args[1].lower()+" suicide")
+                self.respond('illegal move: "{} {}" is suicide'.format(args[0],args[1]))
                 return
             
 
@@ -320,21 +339,38 @@ class GtpConnection():
     def genmove_cmd(self, args):
         """ Modify this function for Assignment 1 """
         """ generate a move for color args[0] in {'b','w'} """
+
         board_color = args[0].lower()
         color = color_to_int(board_color)
-        move = self.go_engine.get_move(self.board, color)
-        move_coord = point_to_coord(move, self.board.size)
-        move_as_string = format_point(move_coord)
-        if self.board.is_legal(move, color):
-            self.board.play_move(move, color)
-            #self.respond("cow")
-            #self.respond(move_as_string)
-            if move_as_string == "PASS":
 
-                return move_as_string
+        if self.board.current_player != color:
+            self.respond('illegal move: "{}" wrong color'.format(args[0]))
+            return 
+
+        move =  GoBoardUtil.generate_legal_moves(self.board, color)
+        moves = GoBoardUtil.gen1_move(self.board, color, move)
+
+        if moves != None:
+            play = moves[random.randint(0,len(moves)-1)]
+            self.board.play_move(play,color)
+            
         else:
-            pass
             self.respond("resign")
+        # board_color = args[0].lower()
+        # color = color_to_int(board_color)
+        # move = self.go_engine.get_move(self.board, color)
+        # move_coord = point_to_coord(move, self.board.size)
+        # move_as_string = format_point(move_coord)
+        # if self.board.is_legal(move, color):
+        #     self.board.play_move(move, color)
+        #     #self.respond("cow")
+        #     #self.respond(move_as_string)
+        #     if move_as_string == "PASS":
+
+        #         return move_as_string
+        # else:
+        #     pass
+        #     self.respond("resign")
 
     """
     ==========================================================================
@@ -430,7 +466,8 @@ def move_to_coord(point_str, board_size):
     except (IndexError, ValueError):
         raise ValueError("invalid point: '{}'".format(s))
     if not (col <= board_size and row <= board_size):
-        raise ValueError("illegal move: '{}'".format(s)+ " wrong coordinate")
+        raise ValueError("illegal move: '{} {}'".format(s)+ " wrong coordinate")
+    
     return row, col
 
 def color_to_int(c):
