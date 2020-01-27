@@ -293,6 +293,11 @@ class GtpConnection():
 
         try:
             board_color = args[0].lower()
+
+            if board_color != "w" and board_color != "b":
+                self.respond('illegal move: "{} {}" wrong color'.format(args[0],args[1]))
+                return
+
             color = color_to_int(board_color)
 
             #color error
@@ -306,9 +311,17 @@ class GtpConnection():
             if args[1].lower() == 'pass':
                 self.respond('illegal move: "{} {}" wrong coordinate'.format(args[0],args[1]))
                 return
-
+            
+            
             coord = move_to_coord(args[1], self.board.size)
-            coord = coord_to_point(coord[0],coord[1], self.board.size)
+
+            if coord != None:
+                coord = coord_to_point(coord[0],coord[1], self.board.size)
+            else:
+                self.respond('illegal move: "{} {}" wrong coordinate'.format(args[0],args[1]))
+                return
+            
+            
 
             # occupied
             if self.board.board[coord] != 0:
@@ -317,7 +330,7 @@ class GtpConnection():
                 return
             
             # capture 
-
+            
             if self.board.is_capture(coord,color):
                 self.respond('illegal move: "{} {}" is capture'.format(args[0],args[1]))
                 return
@@ -328,6 +341,7 @@ class GtpConnection():
             
 
         except Exception as e:
+            
             self.respond('Error: {}'.format(str(e)))
 
 
@@ -341,7 +355,15 @@ class GtpConnection():
         """ generate a move for color args[0] in {'b','w'} """
 
         board_color = args[0].lower()
+            
+
+        if board_color != "w" and board_color != "b":
+            self.respond('illegal move: "{}" wrong color'.format(args[0]))
+            return
+
         color = color_to_int(board_color)
+
+
 
         if self.board.current_player != color:
             self.respond('illegal move: "{}" wrong color'.format(args[0]))
@@ -466,7 +488,9 @@ def move_to_coord(point_str, board_size):
     except (IndexError, ValueError):
         raise ValueError("invalid point: '{}'".format(s))
     if not (col <= board_size and row <= board_size):
-        raise ValueError("illegal move: '{} {}'".format(s)+ " wrong coordinate")
+        #raise ValueError("illegal move: '{} {}'".format(s)+ " wrong coordinate")
+        
+        return None
     
     return row, col
 
